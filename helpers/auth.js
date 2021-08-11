@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const Token = require('../models/token');
 const bcrypt = require('bcrypt');
 
 //CHECK IF CREDENTIALS PROVIDED BY USER IS CORRECT
@@ -42,10 +43,32 @@ exports.generateRefreshToken = async function(user) {
     }, process.env.REFRESH_TOKEN_SECRET);
 }
 
+//GENERATE ACCESS TOKEN FROM REFRESH TOKEN
+exports.verifyRefreshToken = async function(token) {
+    return await jwt.verify(token, process.env.REFRESH_TOKEN_SECRET,(err,data) => {
+        if(err) return false; 
+        return true;
+    });    
+}
 
 //STORE ACCESS AND REFRESH TOKEN IN DATABASE
-exports.storeToken = async function(user,data) {
-    user.access_token = data.access_token || null;
-    user.refresh_token = data.refresh_token || null;
-    await user.save();
+exports.storeToken = async function(user_id,data) {
+    try {
+        let token = await Token.findOne({ user_id : user_id });
+        if(token && process.env.MULTIPLE_LOGIN != 'true') {
+            token.access_token = data.access_token;
+            token.refresh_token = data.refresh_token;
+            await token.save();
+        } else {
+            let newToken = new Token({
+                user_id : user_id,
+                access_token : data.access_token,
+                refresh_token : data.refresh_token
+            });
+            await newToken.save();
+        }
+        return true;
+    } catch (error) {
+        return false;
+    }
 }

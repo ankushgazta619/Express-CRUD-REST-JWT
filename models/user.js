@@ -7,9 +7,7 @@ const userSchema = mongoose.Schema({
     password : { type: String , required : true, minlength : 6 },
     age : { type : Number, min: 0 },
     mobile : { type : String, maxlength: 30 },
-    active : { type : Boolean, default : 1 },
-    access_token: { type : String, default : null },
-    refresh_token: { type: String, default : null }
+    active : { type : Boolean, default : 1 }
 });
 
 //EXPORT MODEL
